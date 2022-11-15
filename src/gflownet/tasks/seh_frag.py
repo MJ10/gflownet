@@ -171,8 +171,7 @@ def main():
     """Example of how this model can be run outside of Determined"""
     hps = {
         'lr_decay': 10000,
-        'qm9_h5_path': '/data/chem/qm9/qm9.h5',
-        'log_dir': '/scratch/logs/seh_frag/run_0/',
+        'log_dir': '/scratch/mjain/logs/seh_frag/',
         'num_training_steps': 10_000,
         'validate_every': 100,
         'sampling_tau': 0.99,
