@@ -16,7 +16,7 @@ from gflownet.algo.trajectory_balance import TrajectoryBalance
 from gflownet.envs.frag_mol_env import FragMolBuildingEnvContext
 from gflownet.envs.graph_building_env import GraphBuildingEnv
 from gflownet.models import bengio2021flow
-from gflownet.models.graph_transformer import GraphTransformerFragGFN
+from gflownet.models.graph_transformer import GraphTransformerGFN
 from gflownet.train import FlatRewards
 from gflownet.train import GFNTask
 from gflownet.train import GFNTrainer
@@ -70,13 +70,13 @@ class SEHTask(GFNTask):
     def cond_info_to_reward(self, cond_info: Dict[str, Tensor], flat_reward: FlatRewards) -> RewardScalar:
         if isinstance(flat_reward, list):
             flat_reward = torch.tensor(flat_reward)
-        return flat_reward**cond_info['beta']
+        return flat_reward.flatten()**cond_info['beta']
 
     def compute_flat_rewards(self, mols: List[RDMol]) -> Tuple[FlatRewards, Tensor]:
         graphs = [bengio2021flow.mol2graph(i) for i in mols]
         is_valid = torch.tensor([i is not None for i in graphs]).bool()
         if not is_valid.any():
-            return FlatRewards(torch.zeros((0,))), is_valid
+            return FlatRewards(torch.zeros((0, 1))), is_valid
         batch = gd.Batch.from_data_list([i for i in graphs if i is not None])
         batch.to(self.device)
         preds = self.models['seh'](batch).reshape((-1,)).data.cpu()
@@ -119,7 +119,7 @@ class SEHFragTrainer(GFNTrainer):
                             ast.literal_eval(self.hps['temperature_dist_params']), wrap_model=self._wrap_model_mp)
 
     def setup_model(self):
-        self.model = GraphTransformerFragGFN(self.ctx, num_emb=self.hps['num_emb'], num_layers=self.hps['num_layers'])
+        self.model = GraphTransformerGFN(self.ctx, num_emb=self.hps['num_emb'], num_layers=self.hps['num_layers'])
 
     def setup(self):
         hps = self.hps

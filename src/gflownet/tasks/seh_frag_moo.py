@@ -20,7 +20,7 @@ from gflownet.algo.multiobjective_reinforce import MultiObjectiveReinforce
 from gflownet.algo.soft_q_learning import SoftQLearning
 from gflownet.algo.trajectory_balance import TrajectoryBalance
 from gflownet.models import bengio2021flow
-from gflownet.models.graph_transformer import GraphTransformerFragGFN
+from gflownet.models.graph_transformer import GraphTransformerGFN
 from gflownet.tasks.seh_frag import SEHFragTrainer
 from gflownet.train import FlatRewards
 from gflownet.train import GFNTask
@@ -72,6 +72,9 @@ class SEHMOOTask(GFNTask):
             upper_bound = stats.gamma.ppf(0.95, loc, scale=scale)
         elif self.temperature_sample_dist == 'uniform':
             beta = self.rng.uniform(*self.temperature_dist_params, n).astype(np.float32)
+            upper_bound = self.temperature_dist_params[1]
+        elif self.temperature_sample_dist == 'loguniform':
+            beta = np.exp(self.rng.uniform(*np.log(self.temperature_dist_params), n).astype(np.float32))
             upper_bound = self.temperature_dist_params[1]
         elif self.temperature_sample_dist == 'beta':
             beta = self.rng.beta(*self.temperature_dist_params, n).astype(np.float32)
@@ -165,7 +168,7 @@ class SEHMOOFragTrainer(SEHFragTrainer):
             model = GraphTransformerFragEnvelopeQL(self.ctx, num_emb=self.hps['num_emb'],
                                                    num_layers=self.hps['num_layers'], num_objectives=4)
         else:
-            model = GraphTransformerFragGFN(self.ctx, num_emb=self.hps['num_emb'], num_layers=self.hps['num_layers'])
+            model = GraphTransformerGFN(self.ctx, num_emb=self.hps['num_emb'], num_layers=self.hps['num_layers'])
 
         if self.hps['algo'] in ['A2C', 'MOQL']:
             model.do_mask = False
@@ -173,6 +176,8 @@ class SEHMOOFragTrainer(SEHFragTrainer):
 
     def setup(self):
         super().setup()
+        self.task = SEHMOOTask(self.training_data, self.hps['temperature_sample_dist'],
+                               ast.literal_eval(self.hps['temperature_dist_params']), wrap_model=self._wrap_model_mp)
         self.sampling_hooks.append(MultiObjectiveStatsHook(256, self.hps['log_dir']))
         if self.hps['preference_type'] == 'dirichlet':
             valid_preferences = metrics.generate_simplex(4, 5)  # This yields 35 points of dimension 4
@@ -222,7 +227,7 @@ def main():
         'lr_decay': 10000,
         'log_dir': '/scratch/mjain/logs/seh_frag_moo/run_tmp/',
         'num_training_steps': 20_000,
-        'validate_every': 5,
+        'validate_every': 500,
         'sampling_tau': 0.95,
         'num_layers': 2,
         'num_data_loader_workers': 6,
