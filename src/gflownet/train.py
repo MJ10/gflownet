@@ -10,6 +10,7 @@ from torch.utils.data import DataLoader
 from torch.utils.data import Dataset
 import torch.utils.tensorboard
 import torch_geometric.data as gd
+from torch.utils.tensorboard import SummaryWriter
 
 from gflownet.data.sampling_iterator import SamplingIterator
 from gflownet.envs.graph_building_env import GraphActionCategorical
@@ -235,7 +236,7 @@ class GFNTrainer:
 
     def log(self, info, index, key):
         if not hasattr(self, '_summary_writer'):
-            self._summary_writer = torch.utils.tensorboard.SummaryWriter(self.hps['log_dir'])
+            self._summary_writer = SummaryWriter(self.hps['log_dir'])
         for k, v in info.items():
             self._summary_writer.add_scalar(f'{key}_{k}', v, index)
 

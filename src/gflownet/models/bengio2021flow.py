@@ -27,7 +27,7 @@ from torch_geometric.nn import Set2Set
 from torch_sparse import coalesce
 
 NUM_ATOMIC_NUMBERS = 56  # Number of atoms used in the molecules (i.e. up to Ba)
-
+MODEL_PATH = os.environ["GFN_MODEL_PATH"]
 
 class MPNNet(nn.Module):
     def __init__(self, num_feat=14, num_vec=3, dim=64, num_out_per_mol=1, num_out_per_stem=105, num_out_per_bond=1,
@@ -71,9 +71,10 @@ class MPNNet(nn.Module):
 def load_original_model():
     num_feat = (14 + 1 + NUM_ATOMIC_NUMBERS)
     mpnn = MPNNet(num_feat=num_feat, num_vec=0, dim=64, num_out_per_mol=1, num_out_per_stem=105, num_conv_steps=12)
-    f = requests.get("https://github.com/GFNOrg/gflownet/raw/master/mols/data/pretrained_proxy/best_params.pkl.gz",
-                     stream=True)
-    params = pickle.load(gzip.open(f.raw))  # nosec
+    # f = requests.get("https://github.com/GFNOrg/gflownet/raw/master/mols/data/pretrained_proxy/best_params.pkl.gz",
+                    #  stream=True)
+    with open(MODEL_PATH, "rb+") as f:
+        params = pickle.load(gzip.open(f.raw))  # nosec
     param_map = {
         'lin0.weight': params[0],
         'lin0.bias': params[1],

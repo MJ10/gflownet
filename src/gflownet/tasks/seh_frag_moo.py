@@ -31,6 +31,8 @@ from gflownet.utils.multiobjective_hooks import MultiObjectiveStatsHook
 from gflownet.utils.multiobjective_hooks import TopKHook
 from gflownet.utils.transforms import thermometer
 
+import warnings
+warnings.filterwarnings("ignore")
 
 class SEHMOOTask(GFNTask):
     """Sets up a multiobjective task where the rewards are (functions of):
@@ -223,12 +225,12 @@ def main():
     """Example of how this model can be run outside of Determined"""
     hps = {
         'lr_decay': 10000,
-        'log_dir': '/scratch/emmanuel.bengio/logs/seh_frag_moo/run_tmp/',
+        'log_dir': '/scratch/mjain/logs/seh_frag_moo/run_tmp/',
         'num_training_steps': 20_000,
         'validate_every': 500,
         'sampling_tau': 0.95,
-        'num_layers': 6,
-        'num_data_loader_workers': 12,
+        'num_layers': 2,
+        'num_data_loader_workers': 6,
         'temperature_dist_params': '(1, 192)',
         'global_batch_size': 256,
         'algo': 'TB',
