@@ -338,6 +338,7 @@ class TrajectoryBalance:
             'invalid_losses': (invalid_mask * traj_losses).sum() / (invalid_mask.sum() + 1e-4),
             'logZ': log_Z.mean(),
             'loss': loss.item(),
+            'logR': (batch.is_valid * log_rewards).mean()
         }
 
         if not torch.isfinite(traj_losses).all():

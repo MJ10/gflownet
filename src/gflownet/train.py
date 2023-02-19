@@ -204,6 +204,8 @@ class GFNTrainer:
             if it % self.hps['validate_every'] == 0:
                 for batch in valid_dl:
                     info = self.evaluate_batch(batch.to(self.device), epoch_idx, batch_idx)
+                    if self.verbose:
+                        print("Valid:", ' '.join(f'{k}:{v:.2f}' for k, v in info.items()))
                     self.log(info, it, 'valid')
                 end_metrics = {}
                 for c in callbacks.values():
